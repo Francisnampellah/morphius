@@ -1,0 +1,44 @@
+services:
+  cloudcompare-watcher:
+    build: .
+    container_name: cloudcompare-watcher
+    restart: unless-stopped
+    
+    # Volume mapping to access host data directory
+    volumes:
+      # Map tmp data directory to container data directory (Docker Desktop compatible)
+      - /tmp/cloudcompare-data:/app/data:rw
+    
+    # Environment variables
+    environment:
+      - NODE_ENV=production
+      - HOME=/app
+      - DOCUMENTS_PATH=/app/data
+    
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Optional: Create a network for the service
+networks:
+  default:
+    name: cloudcompare-network

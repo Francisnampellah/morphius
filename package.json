@@ -1,0 +1,22 @@
+{
+  "name": "cloudcompare-watcher",
+  "version": "1.0.0",
+  "description": "Automatically watches and organizes CloudCompare output files (.bin and .txt)",
+  "main": "watcher.js",
+  "type": "module",
+  "scripts": {
+    "start": "node watcher.js",
+    "dev": "node watcher.js"
+  },
+  "keywords": [
+    "cloudcompare",
+    "file-watcher",
+    "automation",
+    "point-cloud"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.5.3"
+  }
+}
