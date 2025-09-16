@@ -26,6 +26,9 @@ let currentBatch = {
 // Track processed files to avoid infinite loops
 const processedFiles = new Set();
 
+// Track timeout for batch processing
+let batchTimeout = null;
+
 // SF value mapping
 const SF_CATEGORIES = {
   0: 'other',
@@ -348,6 +351,12 @@ async function handleBinFile(filePath) {
 
   log(`✅ Prefix extracted: ${prefix}`, colors.green);
   
+  // Clear any existing timeout
+  if (batchTimeout) {
+    clearTimeout(batchTimeout);
+    batchTimeout = null;
+  }
+  
   // Start new batch
   currentBatch.binPrefix = prefix;
   currentBatch.binFile = filePath;
@@ -454,12 +463,20 @@ async function main() {
       
       // If we have a complete batch, process it
       if (currentBatch.binPrefix && currentBatch.binFile && currentBatch.txtFiles.length > 0) {
-        // Wait a bit to see if more .txt files arrive
-        setTimeout(async () => {
+        // Clear any existing timeout
+        if (batchTimeout) {
+          clearTimeout(batchTimeout);
+        }
+        
+        // Wait 10 seconds to see if more .txt files arrive
+        log(`⏳ Waiting 10 seconds for more .txt files before processing batch: ${currentBatch.binPrefix}`, colors.yellow);
+        batchTimeout = setTimeout(async () => {
           if (currentBatch.binPrefix && !currentBatch.isProcessing) {
+            log(`⏰ Timeout reached, processing batch: ${currentBatch.binPrefix}`, colors.blue);
             await processCurrentBatch();
           }
-        }, 1000); // Wait 1 second for more files
+          batchTimeout = null;
+        }, 10000); // Wait 10 seconds for more files
       }
     })
     .on('error', error => {
