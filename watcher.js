@@ -85,10 +85,10 @@ async function ensureDirectories() {
 // Extract prefix from .bin filename
 function extractBinPrefix(filename) {
   // Pattern: 000025_18_quebec_2022-02-14T11_27_05.918683Z_r30m_fov360deg_margin10.bin
-  // We want: 000025_18
+  // We want: 000025-18 (convert underscore to dash)
   const match = filename.match(/^(\d+_\d+)_/);
   if (match) {
-    return match[1];
+    return match[1].replace('_', '-');
   }
   return null;
 }
@@ -101,7 +101,9 @@ function matchesCurrentBatch(filename) {
   const lastUnderscoreIndex = filename.lastIndexOf('_');
   if (lastUnderscoreIndex > 0) {
     const txtPrefix = filename.substring(0, lastUnderscoreIndex);
-    return txtPrefix === currentBatch.binPrefix;
+    // Convert txtPrefix to dash format for comparison
+    const txtPrefixWithDash = txtPrefix.replace('_', '-');
+    return txtPrefixWithDash === currentBatch.binPrefix;
   }
   return false;
 }
