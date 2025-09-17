@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node watcher.js",
-    "dev": "node watcher.js"
+    "dev": "node watcher.js",
+    "test-sheets": "node test-sheets-integration.js"
   },
   "keywords": [
     "cloudcompare",
@@ -17,6 +18,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "chokidar": "^3.5.3"
+    "chokidar": "^3.5.3",
+    "dotenv": "^17.2.2",
+    "googleapis": "^128.0.0"
   }
 }

@@ -8,12 +8,19 @@ services:
     volumes:
       # Map tmp data directory to container data directory (Docker Desktop compatible)
       - /tmp/cloudcompare-data:/app/data:rw
+      # Mount service account JSON file for Google Sheets authentication
+      # Try service-account.json first, then uploader.json
+      - ./service-account.json:/app/service-account.json:ro
+      - ./uploader.json:/app/uploader.json:ro
     
     # Environment variables
     environment:
       - NODE_ENV=production
       - HOME=/app
       - DOCUMENTS_PATH=/app/data
+      - SHEET_ID=${SHEET_ID}
+      - SHEET_NAME=${SHEET_NAME}
+      - SERVICE_ACCOUNT_PATH=/app/service-account.json
     
     # Resource limits (optional)
     deploy:
