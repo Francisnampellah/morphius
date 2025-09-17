@@ -3,9 +3,6 @@
 // Load environment variables from .env file
 import 'dotenv/config';
 
-// Load environment variables from .env file
-import 'dotenv/config';
-
 import chokidar from 'chokidar';
 import fs from 'fs/promises';
 import path from 'path';
@@ -22,10 +19,6 @@ const INPUT_DIR = path.join(DOCUMENTS_PATH, 'input');
 const RESULTS_DIR = path.join(DOCUMENTS_PATH, 'results');
 const BIN_DIR = path.join(DOCUMENTS_PATH, 'bin');
 const TRACKING_FILE = path.join(RESULTS_DIR, 'sf_tracking.json');
-
-// Batch processing configuration
-const BATCH_TIMEOUT_MS = parseInt(process.env.BATCH_TIMEOUT_MS) || 10000; // 10 seconds default
-const PROCESS_IMMEDIATELY = process.env.PROCESS_IMMEDIATELY === 'true' || false; // Process immediately when first .txt arrives
 
 // Batch processing configuration
 const BATCH_TIMEOUT_MS = parseInt(process.env.BATCH_TIMEOUT_MS) || 10000; // 10 seconds default
@@ -178,12 +171,10 @@ async function updateSFTracking(mergedFilePath, sfCounts) {
     const trackingData = await loadTrackingData();
     const filename = path.basename(mergedFilePath);
     const currentTime = new Date();
-    const currentTime = new Date();
     
     // Create entry for this file
     const fileEntry = {
       filename: filename,
-      timestamp: currentTime.toISOString(),
       timestamp: currentTime.toISOString(),
       totalPoints: Object.values(sfCounts).reduce((sum, count) => sum + count, 0),
       sfCounts: sfCounts,
@@ -450,11 +441,6 @@ async function handleTxtFile(filePath) {
   log(`     - binFile: ${currentBatch.binFile ? 'present' : 'missing'}`, colors.cyan);
   log(`     - txtFiles: ${currentBatch.txtFiles.length}`, colors.cyan);
   log(`     - isProcessing: ${currentBatch.isProcessing}`, colors.cyan);
-  log(`   Current batch state:`, colors.cyan);
-  log(`     - binPrefix: ${currentBatch.binPrefix}`, colors.cyan);
-  log(`     - binFile: ${currentBatch.binFile ? 'present' : 'missing'}`, colors.cyan);
-  log(`     - txtFiles: ${currentBatch.txtFiles.length}`, colors.cyan);
-  log(`     - isProcessing: ${currentBatch.isProcessing}`, colors.cyan);
 }
 
 // Handle file detection
@@ -526,35 +512,15 @@ async function main() {
     interval: 1000, // Poll every 1 second
     binaryInterval: 1000,
     depth: 0 // Only watch the immediate directory
-    ignoreInitial: true, // Don't process existing files again (we already did)
-    awaitWriteFinish: {
-      stabilityThreshold: 2000, // Wait 2 seconds after file stops changing
-      pollInterval: 200 // Check every 200ms
-    },
-    usePolling: true, // Force polling mode for better reliability
-    interval: 1000, // Poll every 1 second
-    binaryInterval: 1000,
-    depth: 0 // Only watch the immediate directory
   });
 
   watcher
     .on('ready', () => {
       log(`👀 File watcher ready, monitoring: ${INPUT_DIR}`, colors.green);
     })
-    .on('ready', () => {
-      log(`👀 File watcher ready, monitoring: ${INPUT_DIR}`, colors.green);
-    })
     .on('add', async (filePath) => {
       log(`🆕 New file detected: ${path.basename(filePath)}`, colors.bright);
-      log(`🆕 New file detected: ${path.basename(filePath)}`, colors.bright);
       await handleFile(filePath);
-      
-      // Debug: Check batch state
-      log(`🔍 Checking batch processing conditions:`, colors.blue);
-      log(`   - binPrefix: ${currentBatch.binPrefix}`, colors.blue);
-      log(`   - binFile: ${currentBatch.binFile ? 'present' : 'missing'}`, colors.blue);
-      log(`   - txtFiles.length: ${currentBatch.txtFiles.length}`, colors.blue);
-      log(`   - isProcessing: ${currentBatch.isProcessing}`, colors.blue);
       
       // Debug: Check batch state
       log(`🔍 Checking batch processing conditions:`, colors.blue);
@@ -567,12 +533,9 @@ async function main() {
       if (currentBatch.binPrefix && currentBatch.binFile && currentBatch.txtFiles.length > 0) {
         log(`✅ Batch conditions met, setting up timeout...`, colors.green);
         
-        log(`✅ Batch conditions met, setting up timeout...`, colors.green);
-        
         // Clear any existing timeout
         if (batchTimeout) {
           clearTimeout(batchTimeout);
-          log(`   Cleared existing timeout`, colors.cyan);
           log(`   Cleared existing timeout`, colors.cyan);
         }
         
@@ -585,15 +548,6 @@ async function main() {
           }
           batchTimeout = null;
         }, 10000); // Wait 10 seconds for more files
-      } else {
-        log(`❌ Batch conditions not met, not processing yet`, colors.yellow);
-      }
-    })
-    .on('change', (filePath) => {
-      log(`🔄 File changed: ${path.basename(filePath)}`, colors.yellow);
-    })
-    .on('unlink', (filePath) => {
-      log(`🗑️  File removed: ${path.basename(filePath)}`, colors.yellow);
       } else {
         log(`❌ Batch conditions not met, not processing yet`, colors.yellow);
       }
@@ -655,55 +609,11 @@ async function main() {
       // Ignore polling errors
     }
   }, 5000); // Check every 5 seconds
-
-  // Backup polling mechanism - check for new files every 5 seconds
-  const pollInterval = setInterval(async () => {
-    try {
-      const files = await fs.readdir(INPUT_DIR);
-      const newFiles = files.filter(file => 
-        (file.endsWith('.bin') || file.endsWith('.txt')) && 
-        !processedFiles.has(path.join(INPUT_DIR, file))
-      );
-      
-      if (newFiles.length > 0) {
-        log(`🔍 Polling detected ${newFiles.length} new file(s): ${newFiles.join(', ')}`, colors.blue);
-        for (const file of newFiles) {
-          const filePath = path.join(INPUT_DIR, file);
-          log(`🆕 Polling detected file: ${file}`, colors.bright);
-          await handleFile(filePath);
-          
-          // Check batch processing conditions
-          if (currentBatch.binPrefix && currentBatch.binFile && currentBatch.txtFiles.length > 0) {
-            log(`✅ Polling: Batch conditions met, setting up timeout...`, colors.green);
-            
-            // Clear any existing timeout
-            if (batchTimeout) {
-              clearTimeout(batchTimeout);
-              log(`   Cleared existing timeout`, colors.cyan);
-            }
-            
-            // Wait 10 seconds to see if more .txt files arrive
-            log(`⏳ Waiting 10 seconds for more .txt files before processing batch: ${currentBatch.binPrefix}`, colors.yellow);
-            batchTimeout = setTimeout(async () => {
-              if (currentBatch.binPrefix && !currentBatch.isProcessing) {
-                log(`⏰ Timeout reached, processing batch: ${currentBatch.binPrefix}`, colors.blue);
-                await processCurrentBatch();
-              }
-              batchTimeout = null;
-            }, 10000); // Wait 10 seconds for more files
-          }
-        }
-      }
-    } catch (error) {
-      // Ignore polling errors
-    }
-  }, 5000); // Check every 5 seconds
   log('', colors.reset);
 
   // Handle graceful shutdown
   process.on('SIGINT', () => {
     log('\n🛑 Shutting down watcher...', colors.yellow);
-    clearInterval(pollInterval);
     clearInterval(pollInterval);
     watcher.close();
     process.exit(0);
