@@ -8,6 +8,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { syncAnnotation } from './sheets-sync.js';
+import { generateAIComment } from './ai-comment-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -201,6 +202,16 @@ async function updateSFTracking(mergedFilePath, sfCounts) {
       }
     }
     
+    // Generate AI comment based on analysis results
+    let aiComment = 'Completed. No problem. Review GOOD'; // Default fallback
+    try {
+      log(`🤖 Generating AI comment for ${filename}...`, colors.blue);
+      aiComment = await generateAIComment(sfCounts, fileEntry.sfCategories, fileEntry.totalPoints, filename);
+      log(`✅ AI comment generated: "${aiComment}"`, colors.green);
+    } catch (aiError) {
+      log(`⚠️  AI comment generation failed (using fallback): ${aiError.message}`, colors.yellow);
+    }
+
     // Sync to Google Sheets if configured
     try {
       const sheetId = process.env.SHEET_ID;
@@ -217,7 +228,7 @@ async function updateSFTracking(mergedFilePath, sfCounts) {
         }
         
         log(`🔄 Syncing to Google Sheets: ${prefix}`, colors.blue);
-        await syncAnnotation(sheetId, sheetName, prefix, sfCounts, prevTime, currentTime);
+        await syncAnnotation(sheetId, sheetName, prefix, sfCounts, prevTime, currentTime, aiComment, fileEntry.totalPoints);
       } else {
         log(`⚠️  Google Sheets not configured (missing SHEET_ID or SHEET_NAME)`, colors.yellow);
       }

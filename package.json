@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node watcher.js",
     "dev": "node watcher.js",
-    "test-sheets": "node test-sheets-integration.js"
+    "test-sheets": "node test-sheets-integration.js",
+    "test-ai": "node test-ai-comments.js"
   },
   "keywords": [
     "cloudcompare",
@@ -18,6 +19,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@huggingface/inference": "^4.8.0",
     "chokidar": "^3.5.3",
     "dotenv": "^17.2.2",
     "googleapis": "^128.0.0"
