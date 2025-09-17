@@ -74,22 +74,34 @@ The `watcher.js` script lives in your project folder, but all file operations ha
 
 1. **Install Node.js** (v18+ recommended).
 
-2. **Initialize your project:**
+2. **Clone or download this project:**
    ```bash
-   mkdir cloudcompare-watcher
+   git clone <repository-url>
    cd cloudcompare-watcher
-   npm init -y
    ```
 
-3. **Install dependencies:**
+3. **Run the setup script:**
    ```bash
-   npm install chokidar
+   ./setup-local.sh
+   ```
+   
+   Or manually:
+   ```bash
+   # Install dependencies
+   npm install
+   
+   # Create environment file
+   cp env.example .env
+   # Edit .env with your Google Sheets configuration
+   
+   # Create required directories
+   mkdir -p ~/Documents/input ~/Documents/results ~/Documents/bin
    ```
 
-4. **Create the folders in your Documents directory:**
-   ```bash
-   mkdir ~/Documents/input ~/Documents/results ~/Documents/bin
-   ```
+4. **Configure Google Sheets (optional):**
+   - Place your service account JSON file (`uploader.json` or `service-account.json`) in the project root
+   - Edit `.env` file with your `SHEET_ID` and `SHEET_NAME`
+   - Share your Google Sheet with the service account email
 
 ## ▶️ Running the Watcher
 
@@ -125,8 +137,18 @@ The `watcher.js` script lives in your project folder, but all file operations ha
 Run the watcher from your project folder:
 
 ```bash
+# Basic run
 node watcher.js
+
+# Or with environment variables
+SHEET_ID="your_sheet_id" SHEET_NAME="your_sheet_name" node watcher.js
+
+# Or load from .env file (if you have dotenv installed)
+# npm install dotenv
+# node -r dotenv/config watcher.js
 ```
+
+**Note**: The watcher will automatically detect your service account file (`uploader.json` or `service-account.json`) in the project root.
 
 ### Usage
 
@@ -173,6 +195,7 @@ You can modify `watcher.js` if you want to:
 - **File organization**: Moves `.bin` files to dedicated folder
 - **Text file merging**: Combines multiple `.txt` files with same prefix
 - **SF value tracking**: Analyzes and categorizes SF values in merged files
+- **Google Sheets integration**: Automatically updates Google Sheets with SF analysis results
 - **Duplicate prevention**: Avoids processing the same file multiple times
 - **Colored console output**: Easy to read status messages
 - **Graceful shutdown**: Handles Ctrl+C properly
@@ -185,6 +208,31 @@ The watcher automatically analyzes SF values in merged files and creates a track
 - **Tracking File**: `~/Documents/results/sf_tracking.json`
 - **Data Format**: Each merged file gets an entry with SF value counts and categories
 - **Real-time Analysis**: Updates automatically after each merge operation
+
+## 📈 Google Sheets Integration
+
+The watcher can automatically sync SF analysis results to Google Sheets:
+
+- **Automatic Updates**: After each batch is processed, results are written to Google Sheets
+- **Row Lookup**: Searches for filename (prefix) in column B of the specified sheet
+- **SF Category Mapping**: Maps SF values to O/X marks in columns O-U
+- **Time Tracking**: Calculates time taken since last annotation (column V)
+- **Comments**: Adds fixed comment "Completed. No problem. Review GOOD" (column W)
+
+### Google Sheets Setup
+1. **Create Service Account**: Set up Google Cloud service account with Sheets API access
+2. **Download Credentials**: Get `service-account.json` file
+3. **Create Google Sheet**: Set up sheet with proper column structure
+4. **Share Sheet**: Give service account editor access to the sheet
+5. **Set Environment Variables**: Configure `SHEET_ID` and `SHEET_NAME`
+
+For detailed setup instructions, see [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md).
+
+### Environment Variables
+```bash
+SHEET_ID=your_google_sheet_id_here
+SHEET_NAME=Sheet1
+```
 
 ## 🐳 Docker Configuration
 

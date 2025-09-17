@@ -16,6 +16,9 @@ COPY . .
 # Create the required directories in the container
 RUN mkdir -p /app/data/input /app/data/results /app/data/bin
 
+# Note: service-account.json will be mounted as a volume at runtime
+# This ensures credentials are not baked into the image
+
 # Set environment variables
 ENV NODE_ENV=production
 ENV HOME=/app
